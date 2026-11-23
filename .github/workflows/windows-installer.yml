@@ -43,11 +43,13 @@ jobs:
         run: |
           & ./dist/XMediaSaverCLI.exe --version
           if ($LASTEXITCODE -ne 0) { throw 'Bundled helper failed.' }
-      - name: Check embedded browser
+      # Hosted runners have no interactive desktop session for WebView2 navigation.
+      # Run the full browser smoke test on a signed-in Windows desktop before release.
+      - name: Check embedded browser package
         shell: pwsh
         run: |
-          & ./dist/XMediaSaver/XMediaSaver.exe --smoke-test
-          if ($LASTEXITCODE -ne 0) { throw 'Embedded browser failed to start.' }
+          & ./dist/XMediaSaver/XMediaSaver.exe --package-check
+          if ($LASTEXITCODE -ne 0) { throw 'Embedded browser package is incomplete.' }
       - name: Publish latest installer release
         shell: pwsh
         env:
