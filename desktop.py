@@ -1508,11 +1508,6 @@ class DesktopApp(QMainWindow):
 
 
 def main() -> None:
-    if "--package-check" in sys.argv:
-        if not getattr(sys, "frozen", False):
-            sys.exit(1)
-        plugin = Path(sys._MEIPASS) / "PySide6" / "plugins" / "webview" / "qtwebview_webview2.dll"
-        sys.exit(0 if plugin.is_file() else 1)
     if "--smoke-test" in sys.argv:
         QtWebView.initialize()
         app = QApplication([sys.argv[0]])
