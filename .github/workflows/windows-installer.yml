@@ -1,0 +1,64 @@
+name: Windows installer
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-build.txt
+      - name: Install and audit Python packages
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-build.txt
+          python -m pip_audit -r requirements.txt --strict
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Build Windows installer
+        shell: pwsh
+        run: ./build.ps1 -Version "0.1.${{ github.run_number }}"
+      - name: Check bundled download helper
+        shell: pwsh
+        run: |
+          & ./dist/XMediaSaverCLI.exe --version
+          if ($LASTEXITCODE -ne 0) { throw 'Bundled helper failed.' }
+      - name: Check embedded browser
+        shell: pwsh
+        run: |
+          & ./dist/XMediaSaver/XMediaSaver.exe --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw 'Embedded browser failed to start.' }
+      - name: Publish latest installer release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          $tag = "build-$shortSha"
+          gh release create $tag `
+            "dist/installer/XMediaSaverSetup.exe#XMediaSaverSetup.exe" `
+            "dist/installer/XMediaSaverSetup.exe.sha256#XMediaSaverSetup.exe.sha256" `
+            --title "Windows installer $shortSha" `
+            --notes "Automatic installer build from main commit $env:GITHUB_SHA. Requires Windows 10/11 and Microsoft Edge WebView2 Runtime." `
+            --target $env:GITHUB_SHA `
+            --latest

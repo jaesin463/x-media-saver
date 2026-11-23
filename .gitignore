@@ -1,0 +1,32 @@
+# Local environments and generated installers
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.spec
+*.exe
+*.msi
+
+# Browser profiles, sessions, download records, and secrets
+WebView2/
+EmbeddedBrowser/
+ChromeProfile/
+*.sqlite3
+*.db
+cookies.txt
+*cookies*.txt
+*.cookies
+.env
+.env.*
+*.pem
+*.pfx
+*.key
+*.log
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
